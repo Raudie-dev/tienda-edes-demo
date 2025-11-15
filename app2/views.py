@@ -2,7 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 from .models import User_admin
-from .crud import crear_prueba, obtener_pruebas, eliminar_prueba
+from .crud import (
+    crear_categoria,
+    obtener_categorias,
+    crear_producto,
+    obtener_productos,
+    eliminar_producto,
+    eliminar_categoria,
+)
 
 
 def login(request):
@@ -37,21 +44,47 @@ def control(request):
     except User_admin.DoesNotExist:
         messages.error(request, 'Usuario no encontrado')
         return redirect('login')
-
-    # CRUD Prueba
+    # Nuevas operaciones: categorías y productos
     if request.method == 'POST':
-        nombre = request.POST.get('nombre')
-        fecha = request.POST.get('fecha')
-        socio = request.POST.get('socio') == 'on'
-        if nombre and fecha:
-            crear_prueba(nombre, fecha, socio)
-            messages.success(request, 'Registro creado correctamente')
-        else:
-            messages.error(request, 'Todos los campos son obligatorios')
+        # Crear categoría
+        if 'crear_categoria' in request.POST:
+            nombre_cat = request.POST.get('categoria_nombre', '').strip()
+            if nombre_cat:
+                crear_categoria(nombre_cat)
+                messages.success(request, 'Categoría creada')
+            else:
+                messages.error(request, 'El nombre de la categoría es obligatorio')
 
-    if request.method == 'POST' and 'eliminar_id' in request.POST:
-        eliminar_prueba(request.POST.get('eliminar_id'))
-        messages.success(request, 'Registro eliminado')
+        # Crear producto
+        elif 'crear_producto' in request.POST:
+            nombre = request.POST.get('nombre', '').strip()
+            precio = request.POST.get('precio', '0')
+            descripcion = request.POST.get('descripcion', '')
+            categoria_id = request.POST.get('categoria_id') or None
+            imagen = request.FILES.get('imagen')
+            if nombre:
+                try:
+                    crear_producto(nombre, precio, descripcion, categoria_id, imagen)
+                    messages.success(request, 'Producto creado correctamente')
+                except Exception as e:
+                    messages.error(request, f'Error al crear el producto: {e}')
+            else:
+                messages.error(request, 'El nombre del producto es obligatorio')
 
-    pruebas = obtener_pruebas()
-    return render(request, 'control.html', {'pruebas': pruebas})
+        # Eliminar producto
+        elif 'eliminar_producto' in request.POST:
+            pid = request.POST.get('eliminar_producto')
+            if pid:
+                eliminar_producto(pid)
+                messages.success(request, 'Producto eliminado')
+
+        # Eliminar categoría
+        elif 'eliminar_categoria' in request.POST:
+            cid = request.POST.get('eliminar_categoria')
+            if cid:
+                eliminar_categoria(cid)
+                messages.success(request, 'Categoría eliminada')
+
+    categorias = obtener_categorias()
+    productos = obtener_productos()
+    return render(request, 'control.html', {'productos': productos, 'categorias': categorias})
