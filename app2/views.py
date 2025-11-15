@@ -13,7 +13,7 @@ from .crud import (
     eliminar_categoria,
     actualizar_producto,
 )
-from app1.models import Product
+from app1.models import Product, Cotizacion
 
 
 def login(request):
@@ -184,4 +184,41 @@ def control_productos(request):
         'q': q,
         'categoria_id': categoria_id,
         'agotado_filter': agotado_filter,
+    })
+
+# Nueva vista: listar solicitudes de cotización
+def solicitudes_cotizacion(request):
+    # Autenticación de administrador (misma lógica que en otras vistas)
+    user_id = request.session.get('user_admin_id')
+    if not user_id:
+        messages.error(request, 'Debe iniciar sesión primero')
+        return redirect('login')
+
+    try:
+        # solo validamos existencia
+        from .models import User_admin  # evita romper si import circular en otros contextos
+        User_admin.objects.get(id=user_id)
+    except Exception:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+
+    # Obtener cotizaciones con cliente e items
+    cotizaciones = Cotizacion.objects.select_related('cliente').prefetch_related('items__producto').all().order_by('-creado')
+
+    solicitudes = []
+    for c in cotizaciones:
+        items = list(c.items.all())
+        subtotal = 0.0
+        for it in items:
+            # usar precio_unitario si está, si no usar precio del producto
+            precio = float(it.precio_unitario) if it.precio_unitario not in (None, '') else float(it.producto.precio or 0)
+            subtotal += precio * int(it.cantidad or 0)
+        solicitudes.append({
+            'cotizacion': c,
+            'items': items,
+            'subtotal': subtotal,
+        })
+
+    return render(request, 'solicitudes_cotizacion.html', {
+        'solicitudes': solicitudes,
     })

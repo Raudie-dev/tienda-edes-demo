@@ -1,0 +1,13 @@
+{% extends 'base_index.html' %}
+
+{% block title %}Solicitud enviada{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Solicitud enviada</h4>
+        <p>Gracias. Su solicitud de cotización (ID: {{ cotizacion.id }}) ha sido recibida. Nos pondremos en contacto con usted pronto.</p>
+    </div>
+    <a href="{% url 'tienda' %}" class="btn btn-primary">Volver a la tienda</a>
+</div>
+{% endblock %}

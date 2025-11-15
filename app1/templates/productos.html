@@ -1,85 +1,95 @@
+{% extends 'base_index.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ producto.nombre }} | Detalle de producto</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-</head>
-<body>
-    <div class="container py-4">
-        <a href="/" class="btn btn-link mb-3"><i class="fas fa-arrow-left"></i> Volver a la tienda</a>
-        <div class="row">
-            <div class="col-md-6">
-                <!-- Carrusel de imágenes -->
-                <div id="carouselProducto" class="carousel slide mb-3" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        {% if imagenes %}
-                            {% for img in imagenes %}
-                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                <img src="{{ img.url }}" class="d-block w-100" alt="{{ producto.nombre }}" style="object-fit:cover;max-height:350px;">
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="carousel-item active">
-                                <img src="{% static 'images/default_event.jpg' %}" class="d-block w-100" alt="Sin imagen" style="object-fit:cover;max-height:350px;">
-                            </div>
-                        {% endif %}
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselProducto" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselProducto" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
-                    </button>
+
+{% block title %}{{ producto.nombre }} | Detalle{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <a href="{% url 'tienda' %}" class="btn btn-link mb-3"><i class="fas fa-arrow-left"></i> Volver a la tienda</a>
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Carrusel de imágenes -->
+            <div id="carouselProducto" class="carousel slide mb-3" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% if imagenes %}
+                        {% for img in imagenes %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ img.url }}" class="d-block w-100" alt="{{ producto.nombre }}" style="object-fit:cover;max-height:350px;">
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="carousel-item active">
+                            <img src="{% static 'images/default_event.jpg' %}" class="d-block w-100" alt="Sin imagen" style="object-fit:cover;max-height:350px;">
+                        </div>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="col-md-6">
-                <h2>{{ producto.nombre }}</h2>
-                <p class="text-muted mb-1">
-                    {% with producto.categorias.all|first as first_cat %}
-                        {% if first_cat %}
-                            <i class="fas fa-tag"></i> {{ first_cat.nombre }}
-                        {% else %}
-                            <i class="fas fa-tag"></i> Sin categoría
-                        {% endif %}
-                    {% endwith %}
-                </p>
-                <h4 class="text-primary mb-3">${{ producto.precio }}</h4>
-                <p>{{ producto.descripcion }}</p>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselProducto" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselProducto" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
             </div>
         </div>
+        <div class="col-md-6">
+            <h2>{{ producto.nombre }}</h2>
+            <p class="text-muted mb-1">
+                {% with producto.categorias.all|first as first_cat %}
+                    {% if first_cat %}
+                        <i class="fas fa-tag"></i> {{ first_cat.nombre }}
+                    {% else %}
+                        <i class="fas fa-tag"></i> Sin categoría
+                    {% endif %}
+                {% endwith %}
+            </p>
+            <h4 class="text-primary mb-3">${{ producto.precio }}</h4>
+            <p>{{ producto.descripcion }}</p>
 
-        <hr class="my-5">
-        <h4 class="mb-4">Productos sugeridos</h4>
-        <div class="row">
-            {% for sugerido in sugeridos %}
-            <div class="col-md-3 mb-4">
-                <div class="card h-100">
-                    <a href="{% url 'productos' sugerido.id %}" style="text-decoration:none;color:inherit;">
-                        {% if sugerido.imagen %}
-                        <img src="{{ sugerido.imagen.url }}" class="card-img-top" alt="{{ sugerido.nombre }}" style="object-fit:cover;max-height:140px;">
-                        {% else %}
-                        <img src="{% static 'images/default_event.jpg' %}" class="card-img-top" alt="Sin imagen" style="object-fit:cover;max-height:140px;">
-                        {% endif %}
-                        <div class="card-body">
-                            <h6 class="card-title">{{ sugerido.nombre }}</h6>
-                            <span class="fw-bold text-primary">${{ sugerido.precio }}</span>
-                        </div>
-                    </a>
+            <!-- Formulario para agregar a la solicitud de cotización -->
+            <form method="post" action="{% url 'cotizacion_add' %}" class="row g-2 align-items-center mt-3">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ producto.id }}">
+                <div class="col-auto">
+                    <label class="visually-hidden" for="cantidad">Cantidad</label>
+                    <input type="number" min="1" name="cantidad" value="1" class="form-control" style="width:100px;">
                 </div>
-            </div>
-            {% empty %}
-            <div class="col-12 text-center">
-                <div class="alert alert-info">No hay productos sugeridos.</div>
-            </div>
-            {% endfor %}
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary"><i class="fas fa-shopping-cart me-1"></i> Solicitar cotización</button>
+                </div>
+                <div class="col-12 mt-2">
+                    <a href="{% url 'cotizacion' %}" class="btn btn-link">Ver mi solicitud de cotización</a>
+                </div>
+            </form>
+
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+
+    <hr class="my-5">
+    <h4 class="mb-4">Productos sugeridos</h4>
+    <div class="row">
+        {% for sugerido in sugeridos %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <a href="{% url 'productos' sugerido.id %}" style="text-decoration:none;color:inherit;">
+                    {% if sugerido.imagen %}
+                    <img src="{{ sugerido.imagen.url }}" class="card-img-top" alt="{{ sugerido.nombre }}" style="object-fit:cover;max-height:140px;">
+                    {% else %}
+                    <img src="{% static 'images/default_event.jpg' %}" class="card-img-top" alt="Sin imagen" style="object-fit:cover;max-height:140px;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">{{ sugerido.nombre }}</h6>
+                        <span class="fw-bold text-primary">${{ sugerido.precio }}</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <div class="alert alert-info">No hay productos sugeridos.</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
