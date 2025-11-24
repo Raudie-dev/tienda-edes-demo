@@ -2,7 +2,8 @@ asgiref==3.9.1
 Django==5.2.4
 packaging==25.0
 sqlparse==0.5.3
-dj-database-url==1.4.0
+dj-database-url==3.0.1
 psycopg2-binary==2.9.6
 whitenoise==6.5.0
 pillow==10.4.0
+uvicorn==0.22.0
